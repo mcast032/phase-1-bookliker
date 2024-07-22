@@ -1,3 +1,5 @@
+let currentUser = {"id": 11, "username": "Mario" }
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchBooks();
 });
@@ -12,7 +14,6 @@ function fetchBooks() {
         .catch(error => console.error('Error fetching books:', error));
 }
 
-// Function to render the book list
 function renderBookList(books) {
     const list = document.getElementById('list');
     list.innerHTML = '';
@@ -20,14 +21,14 @@ function renderBookList(books) {
     books.forEach(book => {
         const li = document.createElement('li');
         li.textContent = book.title;
+        list.appendChild(li);
         li.addEventListener('click', () => {
             showBookDetails(book);
         });
-        list.appendChild(li);
+       
     });
 }
 
-// Function to show book details
 function showBookDetails(book) {
     const showPanel = document.getElementById('show-panel');
     showPanel.innerHTML = '';
@@ -42,39 +43,67 @@ function showBookDetails(book) {
     description.textContent = book.description;
 
     const userList = document.createElement('ul');
+    userList.id = "users"
     book.users.forEach(user => {
         const userLi = document.createElement('li');
         userLi.textContent = user.username;
         userList.appendChild(userLi);
     });
+    
 
     const likeButton = document.createElement('button');
-    likeButton.textContent = book.users.some(user => user.id === 1) ? 'Unlike' : 'Like';
-    likeButton.addEventListener('click', () => {
-        likeBook(book);
-    });
 
+    likeButton.textContent = "LIKE"
+    
     showPanel.appendChild(title);
     showPanel.appendChild(thumbnail);
     showPanel.appendChild(description);
     showPanel.appendChild(userList);
     showPanel.appendChild(likeButton);
+    likeButton.addEventListener('click', () => {
+        console.log(book)
+        if(!book.users.find(user => user.username === currentUser.username)){
+
+            const newLikes = [...book.users, currentUser]
+            // const updatedBook = {...book, users: newLikes}
+    
+            fetch(`http://localhost:3000/books/${book.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ users: newLikes})
+            })
+            .then(response => response.json())
+            .then(updatedBook => {
+                
+                // showBookDetails(updatedBook);
+                const userList = document.querySelector('#users');
+                // userList.innerHTML = ""
+                // updatedBook.users.forEach(user => {
+                    const userLi = document.createElement('li');
+                    userLi.textContent = currentUser.username;
+                    userList.appendChild(userLi);
+                    console.log(userList)
+                // });
+            })
+            // likeBook(updatedBook);
+        }
+    });
+
 }
+   
+   
 
-// Function to like or unlike a book
-function likeBook(book) {
-    const currentUser = { id: 1, username: 'Mario' };
+function likeBook(book){
 
-    const userIndex = book.users.findIndex(user => user.id === currentUser.id);
+    
 
-    if (userIndex === -1) {
-        book.users.push(currentUser);
-    } else {
-        book.users.splice(userIndex, 1);
-    }
+
+
 
     fetch(`http://localhost:3000/books/${book.id}`, {
-        method: 'PATCH',
+        method: PATCH,
         headers: {
             'Content-Type': 'application/json'
         },
@@ -82,7 +111,8 @@ function likeBook(book) {
     })
     .then(response => response.json())
     .then(updatedBook => {
-        showBookDetails(updatedBook);
+        debugger
+        // showBookDetails(updatedBook);
     })
-    .catch(error => console.error('Error liking/un-liking book:', error));
+
 }
